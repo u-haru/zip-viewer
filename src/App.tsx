@@ -257,7 +257,14 @@ const App = () => {
         component="footer"
         sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}
       >
-        GitHub: <a href="https://github.com/u-haru/zip-viewer" target="_blank" rel="noopener noreferrer">u-haru/zip-viewer</a>
+        GitHub:
+        <a
+          href="https://github.com/u-haru/zip-viewer"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          u-haru/zip-viewer
+        </a>
       </Box>
 
       <Snackbar
