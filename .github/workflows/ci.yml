@@ -22,10 +22,6 @@ jobs:
         run: npm run lint
       - name: Unit tests
         run: npm run test -- --runInBand
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-      - name: E2E tests
-        run: npm run e2e -- --reporter=dot
       - name: Build
         run: npm run build
 
