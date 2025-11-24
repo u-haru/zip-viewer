@@ -66,4 +66,4 @@ src/
 
 ## ライセンス
 
-MIT License © u-haru
+MIT License
