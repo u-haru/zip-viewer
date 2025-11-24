@@ -5,6 +5,7 @@ export type ThemeChoice = 'light' | 'dark' | 'system';
 export type PageEntry = {
   name: string;
   url: string;
+  cacheKey?: string;
   dataUrl?: string;
 };
 

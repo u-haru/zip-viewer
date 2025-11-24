@@ -7,6 +7,7 @@ import type {
   ThemeChoice,
   TocItem,
 } from '../types';
+import { getPageBlob } from '../utils/pageCache';
 
 export type ViewerState = {
   pages: PageEntry[];
@@ -67,7 +68,12 @@ export const useViewerStore = create<ViewerState>()(
       setTheme: (theme) => set({ theme }),
       setPages: (pages, toc = [], name) => {
         set({ pages, toc, currentIndex: 0 });
-        void idbSet('last-comic', { pages, toc, name });
+        const persistable = pages.map((p) => ({
+          name: p.name,
+          cacheKey: p.cacheKey,
+          dataUrl: p.dataUrl,
+        }));
+        void idbSet('last-comic', { pages: persistable, toc, name });
       },
       setCurrentIndex: (index) =>
         set((state) => ({ currentIndex: clampIndex(index, state.pages) })),
@@ -110,12 +116,21 @@ export const useViewerStore = create<ViewerState>()(
           name?: string;
         }>('last-comic');
         if (!cached) return false;
-        const hydratedPages = cached.pages.map((p) => ({
-          ...p,
-          url: p.dataUrl
-            ? URL.createObjectURL(dataUrlToBlob(p.dataUrl))
-            : p.url,
-        }));
+        const hydratedPages: PageEntry[] = [];
+        for (const p of cached.pages) {
+          let url = '';
+          if (p.cacheKey) {
+            const blob = await getPageBlob(p.cacheKey);
+            if (blob) url = URL.createObjectURL(blob);
+          }
+          if (!url && p.dataUrl) {
+            url = URL.createObjectURL(dataUrlToBlob(p.dataUrl));
+          }
+          if (!url && p.url) {
+            url = p.url;
+          }
+          if (url) hydratedPages.push({ ...p, url });
+        }
         set({ pages: hydratedPages, toc: cached.toc ?? [], currentIndex: 0 });
         return true;
       },

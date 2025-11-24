@@ -1,5 +1,7 @@
+import { set as idbSet } from 'idb-keyval';
 import JSZip from 'jszip';
 import type { PageEntry, TocItem } from '../types';
+import { clearPageCache, putPageBlob } from './pageCache';
 
 const imageExtensions = [
   '.jpg',
@@ -30,8 +32,25 @@ export type LoadedZip = {
   toc: TocItem[];
 };
 
+type CacheManifest = {
+  fileKey: string;
+  pages: { name: string; cacheKey?: string }[];
+  toc: TocItem[];
+};
+
+const buildFileKey = (file: File) =>
+  `${file.name}-${file.size}-${file.lastModified}`;
+
 export async function loadZipFile(file: File): Promise<LoadedZip> {
+  const fileKey = buildFileKey(file);
+  const cacheSupported = typeof caches !== 'undefined';
+  if (cacheSupported) {
+    await clearPageCache();
+  }
+
   const zip = await JSZip.loadAsync(file);
+  const cachePrefix = `__zip-cache/${fileKey}/`;
+
   const imageEntries = Object.values(zip.files)
     .filter((entry) => !entry.dir && isImage(entry.name))
     .sort((a, b) => naturalCompare(a.name, b.name));
@@ -41,8 +60,12 @@ export async function loadZipFile(file: File): Promise<LoadedZip> {
   for (const entry of imageEntries) {
     const blob = await entry.async('blob');
     const url = URL.createObjectURL(blob);
-    const dataUrl = await blobToDataUrl(blob);
-    pages.push({ name: entry.name, url, dataUrl });
+    const cacheKey = cacheSupported ? `${cachePrefix}${entry.name}` : undefined;
+    if (cacheKey) {
+      await putPageBlob(cacheKey, blob);
+    }
+    const dataUrl = cacheSupported ? undefined : await blobToDataUrl(blob);
+    pages.push({ name: entry.name, url, cacheKey, dataUrl });
   }
 
   const tocEntry = zip.file(/toc\.json$/i)?.[0];
@@ -63,6 +86,15 @@ export async function loadZipFile(file: File): Promise<LoadedZip> {
       title: p.name.split('/').pop() ?? `Page ${idx + 1}`,
       page: idx,
     }));
+  }
+
+  if (cacheSupported) {
+    const manifest: CacheManifest = {
+      fileKey,
+      pages: pages.map((p) => ({ name: p.name, cacheKey: p.cacheKey })),
+      toc,
+    };
+    await idbSet('zip-cache-manifest', manifest);
   }
 
   return { pages, toc };

@@ -70,20 +70,23 @@ const App = () => {
 
   React.useEffect(() => setPageInput(String(currentIndex + 1)), [currentIndex]);
 
-  const handleFiles = React.useCallback(async (files: File[]) => {
-    const [file] = files;
-    if (!file) return;
-    setLoading(true);
-    setError(undefined);
-    try {
-      const { pages: loadedPages, toc: loadedToc } = await loadZipFile(file);
-      setPages(loadedPages, loadedToc, file.name);
-    } catch (err) {
-      setError((err as Error).message || 'Failed to load ZIP');
-    } finally {
-      setLoading(false);
-    }
-  }, [setError, setLoading, setPages]);
+  const handleFiles = React.useCallback(
+    async (files: File[]) => {
+      const [file] = files;
+      if (!file) return;
+      setLoading(true);
+      setError(undefined);
+      try {
+        const { pages: loadedPages, toc: loadedToc } = await loadZipFile(file);
+        setPages(loadedPages, loadedToc, file.name);
+      } catch (err) {
+        setError((err as Error).message || 'Failed to load ZIP');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setError, setLoading, setPages]
+  );
 
   // global drag & drop
   React.useEffect(() => {
@@ -181,20 +184,20 @@ const App = () => {
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center" flex={1}>
                 <Typography variant="caption">{t('goTo')}</Typography>
-              <TextField
-                size="small"
-                value={pageInput}
-                onChange={(e) => setPageInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleGoToPage()}
-                sx={{ width: 100 }}
-              />
-              <Button
-                onClick={handleGoToPage}
-                variant="outlined"
-                size="small"
-              >
-                {t('jump')}
-              </Button>
+                <TextField
+                  size="small"
+                  value={pageInput}
+                  onChange={(e) => setPageInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleGoToPage()}
+                  sx={{ width: 100 }}
+                />
+                <Button
+                  onClick={handleGoToPage}
+                  variant="outlined"
+                  size="small"
+                >
+                  {t('jump')}
+                </Button>
                 <Box
                   sx={{
                     flex: 1,
@@ -231,13 +234,13 @@ const App = () => {
                 <Typography variant="body2" color="text.secondary">
                   {currentIndex + 1} / {pages.length}
                 </Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => setReaderOpen(true)}
-              >
-                {t('fullscreenReader')}
-              </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setReaderOpen(true)}
+                >
+                  {t('fullscreenReader')}
+                </Button>
               </Stack>
             </Stack>
 
