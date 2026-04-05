@@ -4,7 +4,7 @@
 
 ## デモ
 
-- GitHub Pages: https://u-haru.github.io/zip-viewer/
+- GitHub Pages: https://pages.u-haru.com/zip-viewer/
 
 ## 推奨環境
 
